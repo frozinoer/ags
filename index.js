@@ -21,9 +21,9 @@ const TravelerScraper = require("./modules/traveler/scraper");
 const SlackApi = require("./modules/slackApi");
 
 const dotenvResult = require('dotenv').config();
-if (dotenvResult.error) {
+/*if (dotenvResult.error) {
   throw dotenvResult.error
-}
+}*/
 
 
 let travelerBatchInterval = process.env.TRAVELER_BATCH_INTERVAL_IN_MS;

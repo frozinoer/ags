@@ -6,9 +6,9 @@ const Nightmare = require('nightmare');
 require('nightmare-load-filter')(Nightmare);
 
 const dotenvResult = require('dotenv').config();
-if (dotenvResult.error) {
+/*if (dotenvResult.error) {
   throw dotenvResult.error
-}
+}*/
 
 let common = require("./common");
 

@@ -3,9 +3,9 @@ const rp = require('request-promise');
 const _ = require('lodash');
 
 const dotenvResult = require('dotenv').config();
-if (dotenvResult.error) {
+/*if (dotenvResult.error) {
   throw dotenvResult.error
-}
+}*/
 
 let common = require("./common");
 
