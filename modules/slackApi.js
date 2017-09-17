@@ -1,8 +1,7 @@
 const IncomingWebhook = require('@slack/client').IncomingWebhook;
 const moment = require('moment');
 
-//var url = process.env.SLACK_WEBHOOK_URL || '';
-const url = "https://hooks.slack.com/services/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";
+const url = process.env.SLACK_WEBHOOK_URL;
 
 var webhook = new IncomingWebhook(url);
 
