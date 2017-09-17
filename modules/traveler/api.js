@@ -28,13 +28,14 @@ const getApiPage = (options, page, perPage, expectedPageSize) => {
 
     return new Promise((resolve, reject) => {
 
+    	let headers = {};
+    	headers[process.env.ACCESS_TOKEN_PARAM] = process.env.ACCESS_TOKEN_VALUE;
+
 //    	console.log("getApiPage[page:" + page + "]");
 
 		let reqOpts = {
 		    uri: getApiUrl(options, page, perPage),
-		    headers: {
-		        process.env.ACCESS_TOKEN_PARAM: process.env.ACCESS_TOKEN_VALUE
-		    }, 
+		    headers: headers, 
 		    json: true,
 		    resolveWithFullResponse: true,
 		    timeout: 3000

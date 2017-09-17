@@ -33,8 +33,7 @@ const initDatabase = () => {
 
     return new Promise((resolve, reject) => {
 
-        mongoose.connect(`mongodb://${process.env.DB_HOST}/${process.env.DB_NAME}`,
-            {useMongoClient: true});
+        mongoose.connect(process.env.MONGODB_URI, {useMongoClient: true});
         let db = mongoose.connection;
         db.on('error', function(err) {
             reject(err);
