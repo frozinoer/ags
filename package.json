@@ -1,0 +1,31 @@
+{
+  "name": "ags",
+  "version": "1.0.0",
+  "description": "Automatic G Stream",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@slack/client": "^3.12.0",
+    "bluebird": "^3.5.0",
+    "colors": "^1.1.2",
+    "dotenv": "^4.0.0",
+    "express": "^4.15.4",
+    "extend": "^3.0.0",
+    "html-entities": "^1.2.1",
+    "iso-3166-country-list": "^0.1.2",
+    "languagedetect": "^1.1.1",
+    "lodash": "^4.17.3",
+    "log-update": "^1.0.2",
+    "moment": "^2.17.1",
+    "mongoose": "^4.8.5",
+    "nightmare-load-filter": "^0.2.0",
+    "nightmare-webrequest-addon": "^1.0.0",
+    "nightmare-xpath": "^2.0.2",
+    "request-promise": "^4.2.1"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": "6.1.0"
+  }
+}
