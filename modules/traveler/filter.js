@@ -1,109 +1,222 @@
 const _ = require('lodash');
-
-let spokenLanguageBlacklist = ['Arabic', 'Maroccan arabic', 'Turkish', 'Indonesian', 'Kazakh', 'Kirghiz', 'Malay', 
-		'Sinhala', 'Yue chinese', 'Chinese', 'Min nan chinese', 'Mandarin chinese', 'Hindi'];
-
-let regexBlacklist = ["boy[\\s]*friend", '[\\s]+bf[\\s]+', 'husband', 'brother', 'compagnon', 'my mum', 'my mom', 'young couple', 'cheap', 'save money', 'budget', 'I need a place', 'économise', 'pas cher', 'we need a place', 'rent a', 'Я', 
-	'sleep on the floor'];
-
-let countryAlpha2Blacklist = ['DZ', 'BD', 'BA', 'HR', 'MO', 'RS', 'TN', 'TR', 'ID', 'KZ', 'CN', 'IR', 'MX',
-	'EG', 'MY', 'QA', 'AE', 'PK', 'PH', 'KH', 'NI', 'PA', 'GT'];
-
-let maxNights = 7;
-
-let keywordRegex = new RegExp(regexBlacklist.join("|"), "i");
+const countryList = require("iso-3166-country-list");
 
 
+let filteringHits = {};
 
-const descriptionLanguageFilter = user => {
 
-	let language = user.trip.description.language;
-
-	if (!language || language === "pidgin" || language === "english" || language === "french" ) {
-		return true;
-	/*					if (guessedLanguage === "pidgin") {
-				console.log(user.publicName + ": " + guessedLanguage + " - " + user.trip.description);
-			}*/
+const addFilteringHit = (key, foundItem) => {
+	if (!filteringHits[key]) {
+		filteringHits[key] = {};
+		filteringHits[key].hits = 1;
+		filteringHits[key].foundItems = {};
+	} else {
+		filteringHits[key].hits++;
 	}
+	if (foundItem) {
+		if (!filteringHits[key].foundItems[foundItem]) {
+			filteringHits[key].foundItems[foundItem] = 1;
+		} else {
+			filteringHits[key].foundItems[foundItem]++;			
+		}
+	}
+}
 
-	return false;
+const addException = (o, key, foundItem) => {
+	if (!o.exceptions) {
+		o.exceptions = {};
+	}
+	o.exceptions[key] = foundItem;
+	addFilteringHit(key, foundItem);
 };
 
-const spokenLanguageFilter = user => {
 
-	let pass = true;
+const filterByDescriptionLanguage = o => {
 
-	if (user.languages && user.languages.fluent) {
 
-		user.languages.fluent.forEach(function(fluent) {
-			if (_.find(spokenLanguageBlacklist, language => language === fluent.name)) {
-				pass = false;
+	let traveler = o.traveler;
+
+//		console.log("filterByDescriptionLanguage");		
+
+	let language = traveler.trip.description.language;
+	let descriptionLanguageBlacklist = o.params.descriptionLanguageBlacklist;
+
+	if (language && _.find(descriptionLanguageBlacklist, blackListLanguage => blackListLanguage === language)) {
+		addException(o, "descriptionLanguage", language);
+	}
+
+	return o;
+};
+
+const filterBySpokenLanguage = o => {
+
+
+	let traveler = o.traveler;
+
+//		console.log("filterBySpokenLanguage");
+
+	let foundLanguage = false;
+	let foundLanguageName;
+
+	let spokenLanguageBlacklist = o.params.spokenLanguageBlacklist;	
+
+	if (traveler.languages && traveler.languages.fluent) {
+
+		traveler.languages.fluent.forEach(function(fluent) {
+			if (!foundLanguage && _.find(spokenLanguageBlacklist, language => language === fluent.name)) {
+				foundLanguageName = fluent.name;
+				foundLanguage = true;
 			}
-		})
+		});
+		if (foundLanguage) {
+			addException(o, "spokenLanguage", foundLanguageName);				
+		}
 	}
-	return pass;	
-};
-
-const descriptionRegexFilter = user => {
-	return (user.trip.description.text.match(keywordRegex) == null);	
-};
-
-const countryFilter = user => {
-
-	let country = user.country;
-	return (!country || !country.alpha2 || _.indexOf(countryAlpha2Blacklist, country.alpha2) < 0);	
+	return o;
 
 };
 
-nicknameFilter = user => {
-	return (user.publicName.indexOf(" ") > 0);
+const filterByDescriptionRegex = o => {
+
+
+	let traveler = o.traveler;
+
+
+//		console.log("filterByDescriptionRegex");
+
+	let regexBlacklist = o.params.regexBlacklist;
+
+	let matchedRegex = false;
+	let matchedRegexText;
+
+	regexBlacklist.forEach(regexText => {
+
+		if (!matchedRegex) {
+			let regex = new RegExp(regexText, "i");
+
+			if (traveler.trip.description.text.match(regex) != null) {
+				matchedRegex = true;
+				matchedRegexText = regexText;				
+			}				
+		}
+
+	});
+
+	if (matchedRegex) {
+		addException(o, "descriptionRegex", matchedRegexText);
+	}
+
+	return o;
+	
+
+};
+
+const filterByCountry = o => {
+
+
+	let traveler = o.traveler;
+
+
+//		console.log("filterByCountry");
+
+	let countryAlpha2Blacklist = o.params.countryAlpha2Blacklist;
+
+	let country = traveler.country;
+	if (country && country.alpha2) {
+		let foundAlpha2 = countryAlpha2Blacklist.find(e => country.alpha2 === e);
+		if (foundAlpha2) {
+			addException(o, "country", countryList.name(foundAlpha2));
+		}
+	}
+	return o;
+};
+
+const filterByNickname = o => {
+
+	let traveler = o.traveler;
+
+
+//		console.log("filterByNickname");		
+
+	if (traveler.publicName.indexOf(" ") < 0) {
+		addException(o, "nickname", traveler.publicName);
+	}
+	return o;
 }
 
-maxNightsFilter = user => {
-	return (user.trip.nights <= maxNights);
+const filterByMaxNights = o => {
+
+	let traveler = o.traveler;
+
+
+//		console.log("filterByMaxNights");
+
+	let maxNights = o.params.maxNights;
+
+	if (traveler.trip.nights > maxNights) {
+		addException(o, "maxNights", traveler.trip.nights);
+	}
+	return o;
 }
 
 
-exports.process = users => {
+exports.process = (user, travelers) => {
+
     return new Promise((resolve, reject) => {
-    	try {
 
-//    		console.log(users[0]);
+/*		user.filterParams.countryAlpha2Blacklist.forEach(alpha2 => {
+			console.log("alpha2: " + alpha2 + " country: " + countryList.name(alpha2));
+		});*/
 
-//			console.log("Before filtering 'users' length is: " + users.length);
 
-			let descriptionLanguageFiltered = _.filter(users, descriptionLanguageFilter);
+    	let params = user.filterParams;
 
-//			console.log("After description language filter 'users' length is: " + descriptionLanguageFiltered.length);
+		filteringHits = {};
 
-			let spokenLanguageFiltered = _.filter(descriptionLanguageFiltered, spokenLanguageFilter);
+		let filteredTravelers = [];
 
-//			console.log("After spoken language filter 'users' length is: " + spokenLanguageFiltered.length);
+		var sequence = Promise.resolve();
 
-			let descriptionRegexFiltered = _.filter(spokenLanguageFiltered, descriptionRegexFilter);
+		travelers.forEach(traveler => {
 
-//			console.log("After description regex filter 'users' length is: " + descriptionRegexFiltered.length);
+			let o = {traveler: traveler, params: params};
+			sequence = sequence
+//				.then(() => {console.log("Checking " + traveler.publicName)})
+				.then(() => Promise.resolve(o))
+				.then(filterByDescriptionLanguage)
+				.then(filterBySpokenLanguage)
+				.then(filterByDescriptionRegex)
+				.then(filterByCountry)
+//				.then(filterByNickname)
+				.then(filterByMaxNights)
+				.then(o => {
+					if (!o.exceptions) {
+						filteredTravelers.push(o.traveler);
+					}
+				}).catch(e => {
+					console.log("Error for traveler: " + traveler.publicName);
+					console.log(e);
+				});
+		});
+		sequence = sequence.then(() => {
 
-			let countryFiltered = _.filter(descriptionRegexFiltered, countryFilter);
+			let stats = "";
 
-//			console.log("After country filter 'users' length is: " + countryFiltered.length);
+			_.forEach(filteringHits, (value, key) => {				
+				stats += "Filter by " + key + " -> " + value.hits + "\n";
+				if (value.foundItems) {
 
-			let nicknameFiltered = _.filter(countryFiltered, nicknameFilter);
+//					let sortedItems = _.reverse(_.sortBy(_.keys(value.foundItems), ))
+					_.forEach(value.foundItems, (value, key) => {
+						stats += "	Found item: " + key + " -> " + value + "\n";
+					});
 
-//			console.log("After nickname filter 'users' length is: " + nicknameFiltered.length);
-
-			let maxNightsFiltered = _.filter(nicknameFiltered, maxNightsFilter);
-
-//			console.log("After max nights filter 'users' length is: " + maxNightsFiltered.length);
-
-			let filteredUsers = maxNightsFiltered;		
-
-			console.log("After filtering " + filteredUsers.length + " users");
-			
-			resolve(filteredUsers);
-    	} catch(e) {
-    		console.log(e);
-    		reject(e);
-    	}
-    });
+				}
+			});
+//			console.log("Statistics for " + user.name);
+			console.log(stats);
+	    	console.log("Search returned: " + travelers.length + " - after filtering: " + filteredTravelers.length);
+			resolve(filteredTravelers);
+		})
+	});
 }

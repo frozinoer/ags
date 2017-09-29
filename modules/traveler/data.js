@@ -49,35 +49,34 @@ var TravelerSchema = new Schema({
 
 Traveler = mongoose.model('Traveler', TravelerSchema);
 
+exports.update = (user, travelers) => {
 
-exports.update = users => {
-
-    return new Promise((resolve, reject) => { 	
+    return new Promise((resolve, reject) => { 
 
     	try {
 
-			var newUsers = [];
+			var newTravelers = [];
 
 			var sequence = Promise.resolve();
 
-			users.forEach(user => {
+			travelers.forEach(traveler => {
 
 				sequence = sequence
 					.then(() => { 
 						return new Promise((resolve, reject) => {
 
-							Traveler.findOne({"id": user.id}).lean().exec()
-								.then(traveler => {
-									if (!traveler) {
-										user.creationDate = new Date();
-										user.ignored = false;
-										traveler = new Traveler(user);
-										return traveler.save();										
+							Traveler.findOne({"id": traveler.id}).lean().exec()
+								.then(newTraveler => {
+									if (!newTraveler) {
+										traveler.creationDate = new Date();
+										traveler.ignored = false;
+										newTraveler = new Traveler(traveler);
+										return newTraveler.save();										
 									}
 								})
-								.then(newUser => {
-									if (newUser) {
-										newUsers.push(newUser);
+								.then(newTraveler => {
+									if (newTraveler) {
+										newTravelers.push(newTraveler);
 									}
 									resolve();
 
@@ -95,10 +94,10 @@ exports.update = users => {
 				;
 			});
 			sequence = sequence.then(() => {
-				if (newUsers.length) {
-					console.log((newUsers.length + " new user(s)! ").bold.yellow);
+				if (newTravelers.length) {
+					console.log((newTravelers.length + " new travelers(s)! ").bold.yellow);
 				}
-				resolve(newUsers);
+				resolve(newTravelers);
 			})
 /*			Promise.all(promises)
 				.then(() => {

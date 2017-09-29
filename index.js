@@ -7,16 +7,20 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const moment = require('moment');
 var express = require('express');
-var app = express();
 
+var app = express();
 
 const colors = require('colors');
 
 const TravelerApi = require("./modules/traveler/api");
 const TravelerTransformer = require("./modules/traveler/transformer");
-const TravelerStorage = require("./modules/traveler/storage");
+const TravelerData = require("./modules/traveler/data");
 const TravelerFilter = require("./modules/traveler/filter");
 const TravelerScraper = require("./modules/traveler/scraper");
+
+const UserData = require("./modules/user/data");
+User = UserData.User;
+
 
 const SlackApi = require("./modules/slackApi");
 
@@ -57,57 +61,87 @@ const start = () => {
 const end = () => {
     let batchEndTime = new Date().getTime();   
     let elapsedSeconds = (batchEndTime - batchStartTime) / 1000;     
-    console.log((`Executed in ${elapsedSeconds} seconds.`));
+    console.log((`\nExecuted in ${elapsedSeconds} seconds.`).bold);
 //    process.exit(0);
 };
 
 
-const getTravelerListOptions = () => {
+const getUsers = () => {
 
-    let minAge = 21;
-    let maxAge = 32;
-    let numGuests = 4;
-//    let travelerSearchDurationInDays = 32;
+    return new Promise((resolve, reject) => {
+
+        User.find().exec()
+            .then(resolve)
+            .catch(e => {
+                console.error("Request error");
+                console.log(e);
+                reject(e);
+            })
+    });
+};
+
+const getNewTravelers = (users) => {
+
+    var sequence = Promise.resolve();
+    sequence = sequence.then(start);
+
 
     let m = moment();
     let arrivalText = m.format("YYYY-MM-DD");
 
-//    m.add(travelerSearchDurationInDays, 'days');
-//    let departureText = m.format("YYYY-MM-DD");
-    let departureText = process.env.SEARCH_PARAM_DEPARTURE_DATE;
+    users.forEach(user => {
 
-    return {
-        arrivalDate: arrivalText,
-        departureDate: departureText,
-        minAge: minAge,
-        maxAge: maxAge,
-        numGuests: numGuests
-    };
-};
+        m.add(user.searchParams.days, 'days');
+        let departureText = m.format("YYYY-MM-DD");
+
+        user.searchParams.arrivalDate = arrivalText;
+        user.searchParams.departureDate = departureText;
 
 
-const checkTravelerApi = (options) => {
-    Promise.resolve()
-    .then(start)
-//    .then(initDatabase)
-    .then(() => TravelerApi.getUsers(options))
-    .catch(e => {
-        console.log("Error in getUsers");
-        console.log(e);
-    })
-    .then(TravelerTransformer.process)
-    .then(TravelerFilter.process)
-    .then(TravelerStorage.update)
-    .then(SlackApi.post)
-    .then(end)
-    .catch(error => console.log(error.red));    
+        sequence = sequence
+            .then(() => {
+                console.log(("\n" + user.name).yellow.bold);
+            })
+            .then(() => TravelerApi.getTravelers(user))
+            .catch(e => {
+                console.log("Error in getTravelers");
+                console.log(e);
+            })
+            .then(travelers => TravelerTransformer.process(user, travelers))
+            .then(transformedTravelers => TravelerFilter.process(user, transformedTravelers))
+            .then(filteredTravelers => TravelerData.update(user, filteredTravelers))
+            .then(newTravelers => SlackApi.post(user, newTravelers))
+            .catch(error => console.log(error.red));    
+    });
+    sequence = sequence.then(end);
 }
 
+/*router.get('/', function (req, res, next) {
+    res.render('someView', {msg: 'Express'});
+});*/
+
 app.set('port', process.env.PORT || 3000);
+app.set('view engine', 'ejs');
+
+/*app.get('/', function(req, res) {
+    res.render('pages/index');
+});*/
+
+let appUsers;
 
 app.listen(app.get('port'), function() {
-  console.log('Express server listening on port ' + app.get('port'));
-  initDatabase();
-  setInterval(() => checkTravelerApi(getTravelerListOptions()), travelerBatchInterval);
+    console.log('Express server listening on port ' + app.get('port'));
+    initDatabase()
+        .then(getUsers)
+        .then(users => {appUsers = users; return users})
+        .then(getNewTravelers);
 
+
+    setInterval(
+        () => {
+            Promise
+                .resolve(appUsers)
+                .then(getNewTravelers)
+        }, travelerBatchInterval
+    );
 });

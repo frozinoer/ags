@@ -1,72 +1,78 @@
 const IncomingWebhook = require('@slack/client').IncomingWebhook;
 const moment = require('moment');
 
-const url = process.env.SLACK_WEBHOOK_URL;
+const dotenvResult = require('dotenv').config();
 
-var webhook = new IncomingWebhook(url);
+const travelerToMessage = traveler => {
+
+	try {
+			var arrival = traveler.trip.arrival.fullDate;
+			var departure = traveler.trip.departure.fullDate;
+
+			let title = traveler.publicName.split(" ")[0];
+
+			if (traveler.trip.numberOfGuests > 1) {
+				title += " (" + traveler.trip.numberOfGuests + " guests)";
+			}
+
+			title += " " + moment(arrival, "YYYY-MM-DD").format("DD/MM") + "-" + moment(departure, "YYYY-MM-DD").format("DD/MM");
+
+			let message = {
+			    "text": title,
+			    "attachments": [
+			        {
+			            "title": traveler.publicName,
+			            "title_link": process.env.API_BASE_URL + traveler.profileLink,
+			            "fields": [
+			                {
+			                    "title": "Travelers",
+			                    "value": traveler.trip.numberOfGuests,
+			                    "short": true
+			                },
+			                {
+			                    "title": "Nights",
+			                    "value": traveler.trip.nights,
+			                    "short": true
+			                }
+			            ],
+			            "author_name": traveler.country.name,
+			            "image_url": traveler.avatarUrl
+			        },
+			        {
+			            "title": "Message",
+			            "text": traveler.trip.description.text
+			        }
+			    ]
+			}
+			return message;
+	} catch(e) {
+		console.log(e);
+		throw e;
+	} 
 
 
-const userToMessage = user => {
-/*	let text = `${user.avatarUrl}\n` 
-			 + `*${user.publicName}* - ${user.country.name} - ${user.trip.numberOfGuests} guest(s)\n\n`
-			 + `${user.trip.description.text}\n\n`
-			 + `https://www.couchsurfing.com${user.profileLink}`;
-
-	return text;
-
-			 */
-
-	var arrival = user.trip.arrival.fullDate;
-	var departure = user.trip.departure.fullDate;
-
-	let title = moment(arrival, "YYYY-MM-DD").format("ddd DD/MM") + " - " + moment(departure, "YYYY-MM-DD").format("ddd DD/MM");
-
-	let message = {
-	    "text": title,
-	    "attachments": [
-	        {
-	            "title": user.publicName,
-	            "title_link": "https://www.couchsurfing.com" + user.profileLink,
-	            "fields": [
-	                {
-	                    "title": "Travelers",
-	                    "value": user.trip.numberOfGuests,
-	                    "short": true
-	                },
-	                {
-	                    "title": "Nights",
-	                    "value": user.trip.nights,
-	                    "short": true
-	                }
-	            ],
-	            "author_name": user.country.name,
-	            "image_url": user.avatarUrl
-	        },
-	        {
-	            "title": "Message",
-	            "text": user.trip.description.text
-	        }
-	    ]
-	}
-	return message;
 
 };
 
 
-exports.post = newUsers => {
+exports.post = (user, newTravelers) => {
 
-	if (newUsers.length) {
-		console.log(`Posting ${newUsers.length} messages on Slack...`);
-		newUsers.forEach(user => {
+	let slackParams = user.slackParams;
 
-			let message = userToMessage(user);
+	let webhook = new IncomingWebhook(slackParams.webhookUrl);
+
+	if (newTravelers.length) {
+		console.log(`Posting ${newTravelers.length} messages on Slack...`);
+		newTravelers.forEach(traveler => {
+
+			let message = travelerToMessage(traveler);
 
 			webhook.send(message, function(err, header, statusCode, body) {
 			  if (err) {
 			    console.log('Error posting on Slack:', err);
-			  } else {
+			  }/* else {
 			    console.log('Received', statusCode, 'from Slack');
-			  }
+			  }*/
 			});
 		});
 	}

@@ -6,9 +6,9 @@ const Entities = require('html-entities').XmlEntities;
 const entities = new Entities();
 let ld = new LanguageDetect();
 
-const transformLanguage = user => {
+const transformLanguage = traveler => {
 
-	let description = user.trip.description;
+	let description = traveler.trip.description;
 	let detectedLanguages = ld.detect(description);
 
 
@@ -17,7 +17,7 @@ const transformLanguage = user => {
 		guessedLanguage = detectedLanguages[0][0];
 	}
 
-	user.trip.description = {
+	traveler.trip.description = {
 		text: description,
 		language: guessedLanguage
 	};
@@ -46,9 +46,9 @@ const replaceInvalidISOCountry = name => {
 
 }
 
-const transformCountry = user => {
+const transformCountry = traveler => {
 
-	let countryName = user.country;
+	let countryName = traveler.country;
 
 	if (countryName) {
 		countryName = replaceInvalidISOCountry(countryName);
@@ -58,7 +58,7 @@ const transformCountry = user => {
 	    	console.log(("No alpha-2 for " + countryName).yellow);
 			console.log(user);	    	
 	    }*/
-	    user.country = {
+	    traveler.country = {
 	    	alpha2: countryAlpha2,
 	    	name: countryName
 	    }
@@ -66,45 +66,32 @@ const transformCountry = user => {
 
 }
 
-const transformTrip = user => {
-	let trip = user.trip;
+const transformTrip = traveler => {
+	let trip = traveler.trip;
 
 	let arrival = trip.arrival.fullDate;
 	let departure = trip.departure.fullDate;
 
+
 	var d = moment.duration(moment(departure, "YYYY-MM-DD").diff(moment(arrival, "YYYY-MM-DD")));
-//	console.log(d.asDays());
-	trip.nights = d.asDays();
+	trip.nights = Math.round(d.asDays());
 
 }
 
-const transformDescription = user => {
-	let description = user.trip.description;
-	user.trip.description = entities.decode(description);
+
+const transformDescription = traveler => {
+	let description = traveler.trip.description;
+	traveler.trip.description = entities.decode(description);
 }
 
-/*const transformUserId = user => {
-	var id = user.id;
-	user.userId = "" + id;
-	delete user[id];
-}*/
+exports.process = (user, travelers) => {
 
-exports.process = users => {
-    return new Promise((resolve, reject) => {
-    	try {
-
-    		users.forEach(user => {
+	travelers.forEach(traveler => {
 //    			transformUserId(user);
-				transformDescription(user);
-    			transformLanguage(user);
-    			transformCountry(user);
-    			transformTrip(user);
-    		});
-			
-			resolve(users);
-    	} catch(e) {
-    		console.log(e);
-    		reject(e);
-    	}
-    });
+		transformDescription(traveler);
+		transformLanguage(traveler);
+		transformCountry(traveler);
+		transformTrip(traveler);
+	});		
+	return travelers;
 }
