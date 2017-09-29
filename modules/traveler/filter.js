@@ -214,7 +214,7 @@ exports.process = (user, travelers) => {
 				}
 			});
 //			console.log("Statistics for " + user.name);
-			console.log(stats);
+//			console.log(stats);
 	    	console.log("Search returned: " + travelers.length + " - after filtering: " + filteredTravelers.length);
 			resolve(filteredTravelers);
 		})

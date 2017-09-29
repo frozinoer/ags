@@ -12,6 +12,8 @@ const dotenvResult = require('dotenv').config();
 
 let common = require("./common");
 
+
+//todo : checker s'il manque le perPage ou pas
 getWebUrl = options => {
 	let url = process.env.API_BASE_URL
 			+ "/members/travelers?" 

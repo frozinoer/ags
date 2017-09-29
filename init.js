@@ -5,9 +5,7 @@ db.users.drop();
 db.users.createIndex({"name":1}, {unique:true});
 
 db.users.insert({
-
         name: "Fabrice",
-
         filterParams: {
             spokenLanguageBlacklist: ['Arabic', 'Maroccan arabic', 'Turkish', 'Indonesian', 'Kazakh', 'Kirghiz', 'Malay', 'Sinhala', 'Yue chinese', 'Chinese', 'Min nan chinese', 'Mandarin chinese', 'Hindi'],
             regexBlacklist: ["boy[\\s]*friend", '[\\s]+bf[\\s]+', 'husband', 'brother', 'compagnon', 'mon copain', 'my parents', 'my partner', 'my m[o|u].m', 'couple(?!\s+of)', 'cheap', 'save money', 'budget', 'I need a place', 'économise', 'pas cher', 'we need a place', 'rent a', 
@@ -17,7 +15,6 @@ db.users.insert({
             maxNights: 8,
             descriptionLanguageBlacklist: ['spanish', 'russian', 'ukrainian', 'portuguese', 'bulgarian']
         },
-
         searchParams: {
             location: "Paris%2C+France",
             days: 30,
@@ -26,15 +23,16 @@ db.users.insert({
             numGuests: 4,
             gender: "Female"
         },
-
         slackParams: {
-            webhookUrl: "https://hooks.slack.com/services/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"
+            // ags-fab
+            //webhookUrl: "https://hooks.slack.com/services/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"
+            // ags-fab-dev
+            webhookUrl: "https://hooks.slack.com/services/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"
         }
 
 });
 
 db.users.insert({
-
         name: "Katya",
         filterParams: {
             spokenLanguageBlacklist: ['Arabic', 'Maroccan arabic', 'Turkish', 'Indonesian', 'Kazakh', 'Kirghiz', 'Sinhala', 'Yue chinese', 'Chinese', 'Min nan chinese', 'Mandarin chinese'],
@@ -44,7 +42,6 @@ db.users.insert({
             maxNights: 4,
             descriptionLanguageBlacklist: ['spanish', 'ukrainian', 'portuguese', 'bulgarian']
         },
-
         searchParams: {
             location: "Kiev%2C+Ukrain",
             days: 30,
@@ -53,10 +50,11 @@ db.users.insert({
             numGuests: 1,
             gender: "Male"
         },
-
         slackParams: {
-            webhookUrl: "https://hooks.slack.com/services/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"
+            // ags-katya
+            // webhookUrl: "https://hooks.slack.com/services/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"
+            // ags-katya-dev
+            webhookUrl: "https://hooks.slack.com/services/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"
         }
-
 });
 

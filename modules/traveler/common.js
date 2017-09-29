@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
 
-exports.getUrlParameters = (options, perPage) => {
+exports.getUrlParameters = (options) => {
 	let params = `utf8=%E2%9C%93`
 
 		params += `&search_query=${options.location}`
@@ -32,10 +32,6 @@ exports.getUrlParameters = (options, perPage) => {
 
 		if (options.gender === "Female" || options.gender === "Male") {
 			params += `&gender=${options.gender}`;
-		}
-
-		if (perPage) {
-			params += `&perPage=${perPage}`;
 		}
 
 		params += `&country_of_residence=`

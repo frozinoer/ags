@@ -110,7 +110,14 @@ const getNewTravelers = (users) => {
             .then(travelers => TravelerTransformer.process(user, travelers))
             .then(transformedTravelers => TravelerFilter.process(user, transformedTravelers))
             .then(filteredTravelers => TravelerData.update(user, filteredTravelers))
-            .then(newTravelers => SlackApi.post(user, newTravelers))
+            .then(newTravelers => {
+                if (user.lastRequestIsNew) {
+                    UserData.update(user);
+                } else {
+                    SlackApi.post(user, newTravelers);                    
+                }
+
+            })
             .catch(error => console.log(error.red));    
     });
     sequence = sequence.then(end);

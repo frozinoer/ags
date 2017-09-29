@@ -8,6 +8,7 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema({
 
 	name: {type: String, required:true},
+    lastUrlParameters: String,
 
     filterParams: {
         spokenLanguageBlacklist: [String],
@@ -36,3 +37,7 @@ var UserSchema = new Schema({
 User = mongoose.model('User', UserSchema);
 
 exports.User = User;
+
+exports.update = user => {
+    return user.save();
+}

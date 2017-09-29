@@ -11,18 +11,20 @@ let common = require("./common");
 
 let perPage = 100;
 
-getApiUrl = (options, page, perPage) => {
+getApiUrl = (urlParameters, page, perPage) => {
 
 	let url = process.env.API_BASE_URL
 			+ `/api/web/visits/search?`
-			+ common.getUrlParameters(options, perPage)
-		    //+ `&controller=user_profiles&action=travelers`
-		    + `&page=${page}`;
+			+ urlParameters
+			+ `&perPage=${perPage}`
+		    + `&page=${page}`
+//			+ `&controller=user_profiles&action=travelers`		    
 //		    + `&city=Paris&latLng=48.856614%2C2.3522219&location_text=Paris%2C%20France&search=paris--france`
+			;
     return url;
 }
 
-const getApiPage = (user, options, page, perPage, expectedPageSize) => {
+const getApiPage = (user, urlParameters, page, perPage, expectedPageSize) => {
 
     return new Promise((resolve, reject) => {
 
@@ -32,7 +34,7 @@ const getApiPage = (user, options, page, perPage, expectedPageSize) => {
 //    	console.log("getApiPage[page:" + page + "]");
 
 		let reqOpts = {
-		    uri: getApiUrl(options, page, perPage),
+		    uri: getApiUrl(urlParameters, page, perPage),
 		    headers: headers, 
 		    json: true,
 		    resolveWithFullResponse: true,
@@ -73,7 +75,7 @@ const getApiPage = (user, options, page, perPage, expectedPageSize) => {
 
 			})
 			.catch(error => {
-				console.log("	Warning : " + error);
+//				console.log("	Warning : " + error);
 				resolve()
 			})
 /*			.then(() => {
@@ -86,7 +88,7 @@ const getApiPage = (user, options, page, perPage, expectedPageSize) => {
 		if (result) {
 			return result;
 		} else {
-			return getApiPage(options, page, perPage, expectedPageSize);
+			return getApiPage(user, urlParameters, page, perPage, expectedPageSize);
 		}
 	});	
 }
@@ -94,13 +96,20 @@ const getApiPage = (user, options, page, perPage, expectedPageSize) => {
 exports.getTravelers = user => {
     return new Promise((resolve, reject) => { 
 
-    	let searchParams = user.searchParams;
-
     	let travelers;
 
 		let sequence = Promise.resolve();
 
-		getApiPage(user, searchParams, 1, perPage)
+		let urlParameters = common.getUrlParameters(user.searchParams);
+
+		if (urlParameters !== user.lastUrlParameters) {
+			user.lastRequestIsNew = true;
+			user.lastUrlParameters = urlParameters;
+		} else {
+			user.lastRequestIsNew = false;
+		}
+
+		getApiPage(user, urlParameters, 1, perPage)
 			.then(o => {
     			return new Promise((resolve, reject) => {    		
 	    			travelers = o.users;
@@ -109,18 +118,15 @@ exports.getTravelers = user => {
 					if (!user.lastTotalCount) {
 
 						user.lastTotalCount = o.totalCount;
-						console.log("set initial de user.lastTotalCount a " + user.lastTotalCount);
-
 
 						for (let i = 2; i < 15; ++i) {
 							sequence = sequence
-								.then(() => getApiPage(user, searchParams, 1, perPage))
+								.then(() => getApiPage(user, urlParameters, 1, perPage))
 								.then(newO => {
 									if (newO.totalCount > o.totalCount) {
 										o = newO;
 										user.lastTotalCount = o.totalCount;
 										travelers = o.users;
-										console.log("augmentation de user.lastTotalCount a " + user.lastTotalCount);
 									}
 								})
 						}
@@ -134,7 +140,7 @@ exports.getTravelers = user => {
 				    	}
 
 						sequence = sequence
-							.then(() => getApiPage(user, searchParams, i, perPage, expectedPageSize))
+							.then(() => getApiPage(user, urlParameters, i, perPage, expectedPageSize))
 				    		.then(o => {
 				    			travelers = _.concat(travelers, o.users);
 				    		}).catch(error => {
