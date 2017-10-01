@@ -1,6 +1,7 @@
 const fs = require('fs');
 const rp = require('request-promise');
 const _ = require('lodash');
+const Promise = require("bluebird");
 
 const dotenvResult = require('dotenv').config();
 /*if (dotenvResult.error) {
@@ -10,6 +11,8 @@ const dotenvResult = require('dotenv').config();
 let common = require("./common");
 
 let perPage = 100;
+let initFirstPageAttempts = 5;
+let initFirstPageDelayInMs = 100;
 
 getApiUrl = (urlParameters, page, perPage) => {
 
@@ -27,6 +30,8 @@ getApiUrl = (urlParameters, page, perPage) => {
 const getApiPage = (user, urlParameters, page, perPage, expectedPageSize) => {
 
     return new Promise((resolve, reject) => {
+
+//    	console.log("getApiPage: " + user.name + ", page: " + page);
 
     	let headers = {};
     	headers[process.env.ACCESS_TOKEN_PARAM] = process.env.ACCESS_TOKEN_VALUE;
@@ -58,7 +63,7 @@ const getApiPage = (user, urlParameters, page, perPage, expectedPageSize) => {
 						if (user.lastTotalCount && Math.abs(o.totalCount - user.lastTotalCount) > 30) {
 							throw "Incomplete first page";
 						}
-						user.lastTotalCount = o.totalCount;
+//						user.lastTotalCount = o.totalCount;
 						resolve(response.body);
 
 					} else {
@@ -78,11 +83,6 @@ const getApiPage = (user, urlParameters, page, perPage, expectedPageSize) => {
 //				console.log("	Warning : " + error);
 				resolve()
 			})
-/*			.then(() => {
-				console.log("Place for replay");
-//				getApiPage(options, page, perPage, expectedPageSize)
-
-			})*/;
 	})
 	.then(result => {
 		if (result) {
@@ -98,7 +98,7 @@ exports.getTravelers = user => {
 
     	let travelers;
 
-		let sequence = Promise.resolve();
+		
 
 		let urlParameters = common.getUrlParameters(user.searchParams);
 
@@ -112,26 +112,45 @@ exports.getTravelers = user => {
 		getApiPage(user, urlParameters, 1, perPage)
 			.then(o => {
     			return new Promise((resolve, reject) => {    		
-	    			travelers = o.users;
-//	    			console.log("total pages: " + o.totalPages);
 
 					if (!user.lastTotalCount) {
 
-						user.lastTotalCount = o.totalCount;
+//						console.log("Attempt 1/" + initFirstPageAttempts + " returned " + o.totalCount);
 
-						for (let i = 2; i < 15; ++i) {
+						let sequence = Promise.resolve();
+
+						for (let i = 0; i < initFirstPageAttempts - 1; ++i) {
 							sequence = sequence
 								.then(() => getApiPage(user, urlParameters, 1, perPage))
 								.then(newO => {
+//									console.log("Attempt " + (i+2) + "/" + initFirstPageAttempts + " returned " + o.totalCount);
 									if (newO.totalCount > o.totalCount) {
 										o = newO;
-										user.lastTotalCount = o.totalCount;
-										travelers = o.users;
+										console.log("Attempt " + (i+2) + "/" + initFirstPageAttempts + " changed total to " + o.totalCount);										
 									}
 								})
+								.delay(initFirstPageDelayInMs)
 						}
+						sequence.then(() => {
+							resolve(o)
+						})
+					} else {
+						resolve(o);
 					}
-					
+				})
+    		})
+			.then(o => {
+				user.lastTotalCount = o.totalCount;
+				travelers = o.users;
+				return o;
+			})
+			.then(o => {
+
+    			return new Promise((resolve, reject) => {    		
+
+
+				    let sequence = Promise.resolve();
+
 					for (let i = 2; i < o.totalPages + 1; ++i) {
 
 				    	let expectedPageSize = perPage;
@@ -147,10 +166,8 @@ exports.getTravelers = user => {
 				    			console.log("Page " + i + " error");
 				    		});
 					}
-	    			sequence
-						.then(resolve);
-				});
-
+					sequence = sequence.then(resolve);
+    			})
     		})
     		.then(() => {
 //				travelers = _.uniq(travelers);

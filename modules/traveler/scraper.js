@@ -1,5 +1,4 @@
 const fs = require('fs');
-const rp = require('request-promise');
 const _ = require('lodash');
 
 const Nightmare = require('nightmare');

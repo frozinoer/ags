@@ -10,6 +10,7 @@ var TravelerSchema = new Schema({
     "key": {type: String, required:true},
     "visitId": {type: String, required:true},
     "creationDate": {type: Date, required:true},
+    "lastSeenDate": {type: Date, required:true},    
 	"ignored": {type: Boolean, required:true},    
     "avatarUrl": {type: String, required:true},
     "publicName": {type: String, required:true},
@@ -55,9 +56,11 @@ exports.update = (user, travelers) => {
 
     	try {
 
-			var newTravelers = [];
+			let newTravelers = [];
 
-			var sequence = Promise.resolve();
+			let sequence = Promise.resolve();
+
+			let newDate = new Date();
 
 			travelers.forEach(traveler => {
 
@@ -65,18 +68,23 @@ exports.update = (user, travelers) => {
 					.then(() => { 
 						return new Promise((resolve, reject) => {
 
-							Traveler.findOne({"id": traveler.id}).lean().exec()
-								.then(newTraveler => {
-									if (!newTraveler) {
-										traveler.creationDate = new Date();
-										traveler.ignored = false;
-										newTraveler = new Traveler(traveler);
+							Traveler.findOne({"id": traveler.id}).exec()
+								.then(foundTraveler => {
+									if (foundTraveler) {
+										foundTraveler.lastSeenDate = newDate;
+										return foundTraveler.save();																				
+									} else {
+										let newTraveler = new Traveler(traveler);
+										newTraveler.creationDate = newDate;
+										newTraveler.lastSeenDate = newDate;
+										newTraveler.ignored = false;
+										newTraveler.isNew = true;
 										return newTraveler.save();										
 									}
 								})
-								.then(newTraveler => {
-									if (newTraveler) {
-										newTravelers.push(newTraveler);
+								.then(traveler => {
+									if (traveler.isNew) {
+										newTravelers.push(traveler);
 									}
 									resolve();
 

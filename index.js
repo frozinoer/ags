@@ -23,6 +23,7 @@ User = UserData.User;
 
 
 const SlackApi = require("./modules/slackApi");
+const Ping = require("./modules/ping");
 
 const dotenvResult = require('dotenv').config();
 /*if (dotenvResult.error) {
@@ -130,15 +131,23 @@ const getNewTravelers = (users) => {
 app.set('port', process.env.PORT || 3000);
 app.set('view engine', 'ejs');
 
-/*app.get('/', function(req, res) {
-    res.render('pages/index');
-});*/
+app.get('/', function(req, res) {
+    console.log("PONG");
+    res.render('index');
+});
 
 let appUsers;
 
 app.listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
     initDatabase()
+        .then(() => {
+
+            if (!process.env.DEV_MODE) {
+                Ping.send();
+            }
+
+        })
         .then(getUsers)
         .then(users => {appUsers = users; return users})
         .then(getNewTravelers);
