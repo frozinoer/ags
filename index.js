@@ -132,7 +132,6 @@ app.set('port', process.env.PORT || 3000);
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-    console.log("PONG");
     res.render('index');
 });
 
@@ -143,7 +142,7 @@ app.listen(app.get('port'), function() {
     initDatabase()
         .then(() => {
             if (!process.env.DEV_MODE) {
-                setInterval(Ping.send, 12000);
+                setInterval(Ping.send, process.env.SELF_TEST_DELAY);
             }
         })
         .then(getUsers)
