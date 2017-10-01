@@ -142,10 +142,11 @@ app.listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
     initDatabase()
         .then(() => {
-
-            if (!process.env.DEV_MODE) {
+            console.log("check DEV_MODE: " + process.env.DEV_MODE);
+            Ping.send();            
+/*            if (!process.env.DEV_MODE) {
                 Ping.send();
-            }
+            }*/
 
         })
         .then(getUsers)

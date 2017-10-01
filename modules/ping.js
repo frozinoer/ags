@@ -14,7 +14,7 @@ exports.send = () => {
 		};
 
 //		let sequence = Promise.resolve();
-
+		console.log("appel de l'url: " + reqOpts.uri);	
 		rp(reqOpts)
 			.then(response => {
 				resolve();
