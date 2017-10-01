@@ -142,7 +142,11 @@ app.listen(app.get('port'), function() {
     initDatabase()
         .then(() => {
             if (!process.env.DEV_MODE) {
-                setInterval(Ping.send, process.env.SELF_TEST_DELAY);
+                let selfTestDelay = 5 * 60000;
+                if (process.env.SELF_TEST_DELAY) {
+                    selfTestDelay = process.env.SELF_TEST_DELAY;
+                }                
+                setInterval(Ping.send, selfTestDelay);
             }
         })
         .then(getUsers)
