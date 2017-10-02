@@ -56,8 +56,12 @@ const initDatabase = () => {
 let batchStartTime;
 
 const start = () => {
-    let time = moment.utc(new Date()).local().format("HH:mm:ss");
+    let time = moment().add(2, 'hours').format("HH:mm:ss");    
     console.log((`\n${time} Traveler search`).bold);
+
+    console.log("hour: " + moment().hour());
+    console.log("hour: " + moment().local().hour());    
+
     batchStartTime = new Date().getTime();        
 };
 
@@ -148,7 +152,12 @@ app.listen(app.get('port'), function() {
                 if (process.env.SELF_TEST_DELAY) {
                     selfTestDelay = process.env.SELF_TEST_DELAY;
                 }                
-                setInterval(Ping.send, selfTestDelay);
+                setInterval(() => {
+
+                    let time = moment(new Date()).add(2, 'hours').format("HH:mm:ss");
+
+                    Ping.send();
+                }, selfTestDelay);
             }
         })
         .then(getUsers)
