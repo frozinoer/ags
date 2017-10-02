@@ -56,7 +56,7 @@ const initDatabase = () => {
 let batchStartTime;
 
 const start = () => {
-    let time = moment().format("HH:mm:ss");
+    let time = moment(new Date()).utc().local().format("HH:mm:ss");
     console.log((`\n${time} Traveler search`).bold);
     batchStartTime = new Date().getTime();        
 };
