@@ -89,15 +89,10 @@ const getNewTravelers = (users) => {
     var sequence = Promise.resolve();
     sequence = sequence.then(start);
 
-
-    let m = moment();
-    let arrivalText = m.format("YYYY-MM-DD");
-
-    console.log("today's date: " + moment().format("YYYY-MM-DD"));
-        console.log("today's date: " + new Date());
-
-
     users.forEach(user => {
+
+        let m = moment();
+        let arrivalText = m.format("YYYY-MM-DD");        
 
         m.add(user.searchParams.days, 'days');
         let departureText = m.format("YYYY-MM-DD");
