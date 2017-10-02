@@ -98,6 +98,9 @@ const getNewTravelers = (users) => {
         m.add(user.searchParams.days, 'days');
         let departureText = m.format("YYYY-MM-DD");
 
+        console.log("days: " + user.searchParams.days);
+        console.log("departureText: " + departureText);
+
         user.searchParams.arrivalDate = arrivalText;
         user.searchParams.departureDate = departureText;
 
