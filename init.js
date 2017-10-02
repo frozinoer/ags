@@ -25,13 +25,12 @@ db.users.insert({
         },
         slackParams: {
             // ags-fab
-            //webhookUrl: "https://hooks.slack.com/services/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"
+            webhookUrl: "https://hooks.slack.com/services/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"
             // ags-fab-dev
-            webhookUrl: "https://hooks.slack.com/services/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"
+            //webhookUrl: "https://hooks.slack.com/services/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"
         }
 
 });
-
 db.users.insert({
         name: "Katya",
         filterParams: {
@@ -52,9 +51,9 @@ db.users.insert({
         },
         slackParams: {
             // ags-katya
-            // webhookUrl: "https://hooks.slack.com/services/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"
+            webhookUrl: "https://hooks.slack.com/services/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"
             // ags-katya-dev
-            webhookUrl: "https://hooks.slack.com/services/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"
+            //webhookUrl: "https://hooks.slack.com/services/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"
         }
 });
 

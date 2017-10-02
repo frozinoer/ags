@@ -50,6 +50,49 @@ var TravelerSchema = new Schema({
 
 Traveler = mongoose.model('Traveler', TravelerSchema);
 
+
+const updateTraveler = (t, d) => {
+
+    return new Promise((resolve, reject) => { 	
+
+		Traveler.findOne({"id": t.id}).exec()
+			.then(traveler => {
+				if (!traveler) {
+					traveler = new Traveler(t);
+					traveler.creationDate = d;
+					traveler.lastSeenDate = d;
+					traveler.ignored = false;					
+					traveler
+						.save()
+						.then(() => {
+							resolve(traveler)
+						})
+						.catch(e => {
+							console.log(e);					
+							reject(e);
+						});
+				} else {
+					traveler.lastSeenDate = d;
+					traveler
+						.save()
+						.then(() => {
+							resolve()
+						})
+						.catch(e => {
+							console.log(e);					
+							reject(e);
+						});
+				}
+
+			})
+			.catch(e => {
+				console.log(e);
+				reject(e);
+			})
+	});
+
+};
+
 exports.update = (user, travelers) => {
 
     return new Promise((resolve, reject) => { 
@@ -65,42 +108,12 @@ exports.update = (user, travelers) => {
 			travelers.forEach(traveler => {
 
 				sequence = sequence
-					.then(() => { 
-						return new Promise((resolve, reject) => {
-
-							Traveler.findOne({"id": traveler.id}).exec()
-								.then(foundTraveler => {
-									if (foundTraveler) {
-										foundTraveler.lastSeenDate = newDate;
-										console.log("new traveler: " + traveler.id);
-										return foundTraveler.save();																				
-									} else {
-										let newTraveler = new Traveler(traveler);
-										newTraveler.creationDate = newDate;
-										newTraveler.lastSeenDate = newDate;
-										newTraveler.ignored = false;
-										newTraveler.isNew = true;
-										return newTraveler.save();										
-									}
-								})
-								.then(traveler => {
-									if (traveler.isNew) {
-										newTravelers.push(traveler);
-									}
-									resolve();
-
-								})
-								.catch(e => {
-									console.log("mongodb error");
-									reject(e);
-								});
-						});			
+					.then(() => updateTraveler(traveler, newDate))
+					.then(newTraveler => {
+						if (newTraveler) {
+							newTravelers.push(newTraveler);
+						}
 					})
-					.catch(e => {
-						console.log(e);
-
-					});
-				;
 			});
 			sequence = sequence.then(() => {
 				if (newTravelers.length) {
@@ -108,16 +121,6 @@ exports.update = (user, travelers) => {
 				}
 				resolve(newTravelers);
 			})
-/*			Promise.all(promises)
-				.then(() => {
-					console.log(newUsersCount + " new users have been found");
-					resolve(newUsersCount);
-				})
-				.catch(error => {
-					console.log("Promise.all error");
-
-				});*/
-
     	} catch(e) {
 //    		console.log(e);
     		reject(e);

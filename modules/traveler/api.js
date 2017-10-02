@@ -103,6 +103,7 @@ exports.getTravelers = user => {
 		let urlParameters = common.getUrlParameters(user.searchParams);
 
 		if (urlParameters !== user.lastUrlParameters) {
+			console.log(("Request is new: " + urlParameters).green);
 			user.lastRequestIsNew = true;
 			user.lastUrlParameters = urlParameters;
 		} else {
@@ -170,14 +171,12 @@ exports.getTravelers = user => {
     			})
     		})
     		.then(() => {
-//				travelers = _.uniq(travelers);
+				travelers = _.uniqBy(travelers, 'id');
 				resolve(travelers);				    
 			})
 			.catch(error => {
 				console.log("request error");
 				reject(error);
 			})
-
-
 	});	
 }
