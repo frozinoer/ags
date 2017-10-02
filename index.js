@@ -148,15 +148,16 @@ app.listen(app.get('port'), function() {
     initDatabase()
         .then(() => {
             if (!process.env.DEV_MODE) {
-                let selfTestDelay = 5 * 60000;
+                let selfTestDelay = 10 * 60000;
                 if (process.env.SELF_TEST_DELAY) {
                     selfTestDelay = process.env.SELF_TEST_DELAY;
                 }                
                 setInterval(() => {
 
-                    let time = moment(new Date()).add(2, 'hours').format("HH:mm:ss");
-
-                    Ping.send();
+                    let hour = moment().hour();
+                    if (hour < 1 && moment >= 8) {
+                        Ping.send();
+                    }
                 }, selfTestDelay);
             }
         })

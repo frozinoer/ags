@@ -72,6 +72,7 @@ exports.update = (user, travelers) => {
 								.then(foundTraveler => {
 									if (foundTraveler) {
 										foundTraveler.lastSeenDate = newDate;
+										console.log("new traveler: " + traveler.id);
 										return foundTraveler.save();																				
 									} else {
 										let newTraveler = new Traveler(traveler);
