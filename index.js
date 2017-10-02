@@ -151,8 +151,7 @@ app.listen(app.get('port'), function() {
                 setInterval(() => {
 
                     let hour = moment().hour();
-                    console.log("hour: " + hour);
-                    if (hour < 1 && hour >= 8) {
+                    if (hour < 1  || hour >= 8) {
                         console.log("ping send");
                         Ping.send();
                     }
