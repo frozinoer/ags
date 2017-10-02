@@ -93,6 +93,10 @@ const getNewTravelers = (users) => {
     let m = moment();
     let arrivalText = m.format("YYYY-MM-DD");
 
+    console.log("today's date: " + moment().format("YYYY-MM-DD"));
+        console.log("today's date: " + new Date());
+
+
     users.forEach(user => {
 
         m.add(user.searchParams.days, 'days');
