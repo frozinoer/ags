@@ -6,7 +6,7 @@ const _ = require('lodash');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const moment = require('moment');
-moment.locale('fr');
+moment.locale('fr-FR');
 
 var express = require('express');
 
