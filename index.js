@@ -117,6 +117,7 @@ const getNewTravelers = (users) => {
                 if (user.lastRequestIsNew) {
                     UserData.update(user);
                 } else {
+//                    console.log(("newTravelers: " + newTravelers.length).red);
                     SlackApi.post(user, newTravelers);                    
                 }
 
@@ -143,6 +144,7 @@ app.listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
     initDatabase()
         .then(() => {
+
             if (!process.env.DEV_MODE) {
                 let selfTestDelay = 10 * 60000;
                 if (process.env.SELF_TEST_DELAY) {
@@ -150,9 +152,12 @@ app.listen(app.get('port'), function() {
                 }                
                 setInterval(() => {
 
-                    let hour = moment().hour();
-                    if (hour < 1  || hour >= 8) {
-                        console.log("ping send");
+                    let sleepTimeStart = moment(process.env.SLEEP_TIME_START, ['h:m a', 'H:m']);
+                    let sleepTimeEnd = moment(process.env.SLEEP_TIME_END, ['h:m a', 'H:m']);
+
+                    let m = moment();
+
+                    if (m.isBefore(sleepTimeStart) || m.isAfter(sleepTimeEnd)) {
                         Ping.send();
                     }
                 }, selfTestDelay);
